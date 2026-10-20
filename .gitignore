@@ -5,3 +5,9 @@ out/
 .DS_Store
 tsconfig.tsbuildinfo
 *.log
+# rendered from public/icon.png by scripts/icons.mjs and scripts/splash.mjs before dev/build;
+# public/sw.js by scripts/sw.mjs after build
+public/icons/
+public/favicon.ico
+public/splash/
+public/sw.js

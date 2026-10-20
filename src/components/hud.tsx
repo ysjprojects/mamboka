@@ -6,15 +6,15 @@ export const BUBBLE_SIZES = {
   lg: 'h-40 w-40 shrink-0 lg:h-44 lg:w-44 [@media(max-height:620px)]:h-32 [@media(max-height:620px)]:w-32',
 } as const;
 
-export const Bubble: FC<{label: string; value: number; size: keyof typeof BUBBLE_SIZES}> = memo(
-  ({label, value, size}) => (
-    <div className={classNames('mk-bubble', BUBBLE_SIZES[size])}>
-      <span className="mk-label whitespace-nowrap text-[8px] leading-none">{label}</span>
-      <span className="mk-digits mt-1 text-lg">{value}</span>
-    </div>
-  ),
-);
-Bubble.displayName = 'Bubble';
+/** Phone HUD score panel: the score with the best underneath, in one pill that grows with the row. */
+export const ScorePill: FC<{score: number; best: number}> = memo(({score, best}) => (
+  <div className="mk-bubble mk-bubble-wide h-16 min-w-[7rem] max-w-[13rem] flex-1 px-4">
+    <span className="mk-label text-[10px] leading-none">SCORE</span>
+    <span className="mk-digits mt-0.5 text-2xl">{score}</span>
+    <span className="mk-best mt-1 text-[10px] uppercase leading-none tracking-wider">Best {best}</span>
+  </div>
+));
+ScorePill.displayName = 'ScorePill';
 
 export const NextBubble: FC<{tier: number; src: string; name: string; size: keyof typeof BUBBLE_SIZES}> = memo(
   ({tier, src, name, size}) => {
@@ -22,7 +22,7 @@ export const NextBubble: FC<{tier: number; src: string; name: string; size: keyo
     const style = useMemo(() => ({transform: `scale(${0.75 + 0.06 * tier})`}), [tier]);
     return (
       <div className={classNames('mk-bubble', BUBBLE_SIZES[size])}>
-        <span className={classNames('mk-label leading-none', large ? 'text-lg' : 'text-[9px]')}>Next</span>
+        <span className={classNames('mk-label leading-none', large ? 'text-lg' : 'text-[10px]')}>Next</span>
         {src && (
           <img
             alt={name}
@@ -37,26 +37,17 @@ export const NextBubble: FC<{tier: number; src: string; name: string; size: keyo
   },
 );
 
-const ROUND_SIZES = {xs: 'h-9 w-9', sm: 'h-12 w-12', md: 'h-12 w-12'} as const;
-
-export const RoundButton: FC<{
-  label: string;
-  onClick: () => void;
-  size: keyof typeof ROUND_SIZES;
-  children: ReactNode;
-}> = memo(({label, onClick, size, children}) => (
-  <button
-    aria-label={label}
-    className={classNames('mk-round shrink-0', ROUND_SIZES[size])}
-    onClick={onClick}
-    title={label}
-    type="button">
-    {children}
-  </button>
-));
+export const RoundButton: FC<{label: string; onClick: () => void; children: ReactNode}> = memo(
+  ({label, onClick, children}) => (
+    <button aria-label={label} className="mk-round h-12 w-12 shrink-0" onClick={onClick} title={label} type="button">
+      {children}
+    </button>
+  ),
+);
+RoundButton.displayName = 'RoundButton';
 
 export const Overlay: FC<{children: ReactNode}> = memo(({children}) => (
-  <div className="absolute inset-0 z-30 flex items-center justify-center bg-[rgba(70,40,10,0.35)] p-3 backdrop-blur-[1.5px] sm:p-4">
+  <div className="mk-overlay absolute inset-0 z-30 flex items-center justify-center bg-[rgba(70,40,10,0.35)] backdrop-blur-[1.5px]">
     {children}
   </div>
 ));

@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import {
-  type CSSProperties,
   type FC,
   type PointerEvent as ReactPointerEvent,
   memo,
@@ -39,7 +38,6 @@ import {type TierShape, loadShapes} from '@/game/shapes';
 
 import {GroupsModal} from './Groups';
 import {
-  Bubble,
   EvolutionRing,
   GroupsIcon,
   MutedIcon,
@@ -49,6 +47,7 @@ import {
   PlayIcon,
   RestartIcon,
   RoundButton,
+  ScorePill,
   SoundIcon,
   TrophyIcon,
 } from './hud';
@@ -84,19 +83,12 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
   const sfxRef = useRef<Sfx | null>(null);
   const keysRef = useRef({left: false, right: false});
   const pointerRef = useRef<{id: number} | null>(null);
-  const hudRefs = useRef<{
-    header: HTMLElement | null;
-    footer: HTMLElement | null;
-    left: HTMLElement | null;
-    right: HTMLElement | null;
-  }>({
+  const hudRefs = useRef<{header: HTMLElement | null; left: HTMLElement | null; right: HTMLElement | null}>({
     header: null,
-    footer: null,
     left: null,
     right: null,
   });
   const setHeaderRef = useCallback((el: HTMLElement | null) => void (hudRefs.current.header = el), []);
-  const setFooterRef = useCallback((el: HTMLElement | null) => void (hudRefs.current.footer = el), []);
   const setLeftRef = useCallback((el: HTMLElement | null) => void (hudRefs.current.left = el), []);
   const setRightRef = useCallback((el: HTMLElement | null) => void (hudRefs.current.right = el), []);
 
@@ -230,11 +222,12 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
     ];
 
     // The canvas spans the whole page (so the wood/gingham backdrop is continuous under the HUD);
-    // the world itself is fitted into the area the HUD overlays leave free.
+    // the world itself is fitted into the area the HUD overlays leave free. Only one of the two
+    // HUDs is displayed at a time, so the hidden one measures 0.
     const fit = () => {
       const insets = {
         top: hudRefs.current.header?.offsetHeight ?? 0,
-        bottom: hudRefs.current.footer?.offsetHeight ?? 0,
+        bottom: 0,
         left: hudRefs.current.left?.offsetWidth ?? 0,
         right: hudRefs.current.right?.offsetWidth ?? 0,
       };
@@ -529,24 +522,25 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
         </Overlay>
       )}
 
-      {/* Portrait HUD (phones): one row across the top, like the Aladdin X mobile version. */}
+      {/* Portrait HUD (phones, portrait tablets): one row across the top, like the Aladdin X mobile
+          version. Restart, characters, leaderboard and help live in the pause menu and on the
+          game-over card, so a stray tap cannot end a run. */}
       <header
-        className="absolute inset-x-0 top-0 z-10 flex items-center justify-center gap-2 px-2 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))] md:hidden"
+        className="mk-hud wide:hidden absolute inset-x-0 top-0 z-10 flex items-center justify-center gap-2 px-3 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))]"
         ref={setHeaderRef}>
-        <Bubble label="BEST SCORE" size="sm" value={best} />
-        <Bubble label="SCORE" size="sm" value={score} />
+        <ScorePill best={best} score={score} />
         <NextBubble name={names[next] ?? ''} size="sm" src={sources[next] ?? ''} tier={next} />
-        <RoundButton label={phase === 'paused' ? 'Resume' : 'Pause'} onClick={togglePause} size="sm">
-          {phase === 'paused' ? <PlayIcon /> : <PauseIcon />}
+        <RoundButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute}>
+          {muted ? <MutedIcon /> : <SoundIcon />}
         </RoundButton>
-        <RoundButton label="Restart" onClick={restart} size="sm">
-          <RestartIcon />
+        <RoundButton label={phase === 'paused' ? 'Resume' : 'Pause'} onClick={togglePause}>
+          {phase === 'paused' ? <PlayIcon /> : <PauseIcon />}
         </RoundButton>
       </header>
 
       {/* Landscape HUD (desktop): score + leaderboard on the left, Next + evolution ring on the right, like the Switch layout. */}
       <aside
-        className="absolute inset-y-0 left-0 z-10 hidden w-56 flex-col items-center justify-center gap-6 px-4 md:flex lg:w-64 [@media(max-height:620px)]:gap-3"
+        className="mk-hud wide:flex absolute inset-y-0 left-0 z-10 hidden w-56 flex-col items-center justify-center gap-6 pl-[max(1rem,env(safe-area-inset-left))] pr-4 lg:w-64 [@media(max-height:620px)]:gap-3"
         ref={setLeftRef}>
         <div className="mk-bubble h-44 w-44 shrink-0 lg:h-52 lg:w-52 [@media(max-height:620px)]:h-36 [@media(max-height:620px)]:w-36">
           <span className="mk-label text-lg">Score</span>
@@ -560,7 +554,7 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
       </aside>
 
       <aside
-        className="absolute inset-y-0 right-0 z-10 hidden w-56 flex-col items-center justify-center gap-5 px-4 md:flex lg:w-64 [@media(max-height:620px)]:gap-3"
+        className="mk-hud wide:flex absolute inset-y-0 right-0 z-10 hidden w-56 flex-col items-center justify-center gap-5 pl-4 pr-[max(1rem,env(safe-area-inset-right))] lg:w-64 [@media(max-height:620px)]:gap-3"
         ref={setRightRef}>
         <NextBubble name={names[next] ?? ''} size="lg" src={sources[next] ?? ''} tier={next} />
         <div className="[@media(max-height:620px)]:hidden">
@@ -574,49 +568,31 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
           {group?.title ?? '…'}
         </button>
         <div className="flex max-w-[11.5rem] flex-wrap justify-center gap-3">
-          <RoundButton label={phase === 'paused' ? 'Resume' : 'Pause'} onClick={togglePause} size="md">
+          <RoundButton label={phase === 'paused' ? 'Resume' : 'Pause'} onClick={togglePause}>
             {phase === 'paused' ? <PlayIcon /> : <PauseIcon />}
           </RoundButton>
-          <RoundButton label="Restart" onClick={restart} size="md">
+          <RoundButton label="Restart" onClick={restart}>
             <RestartIcon />
           </RoundButton>
-          <RoundButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute} size="md">
+          <RoundButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute}>
             {muted ? <MutedIcon /> : <SoundIcon />}
           </RoundButton>
-          <RoundButton label="Characters" onClick={openGroups} size="md">
+          <RoundButton label="Characters" onClick={openGroups}>
             <GroupsIcon />
           </RoundButton>
-          <RoundButton label="Leaderboard" onClick={openLeaderboard} size="md">
+          <RoundButton label="Leaderboard" onClick={openLeaderboard}>
             <TrophyIcon />
           </RoundButton>
-          <RoundButton label="How to play" onClick={openHelp} size="md">
+          <RoundButton label="How to play" onClick={openHelp}>
             <span className="text-xl font-bold">?</span>
           </RoundButton>
         </div>
-        <p className="mk-label text-center text-xs leading-relaxed">
+        {/* Landscape phones and tablets have no keys to hint at. */}
+        <p className="mk-label text-center text-xs leading-relaxed [@media(hover:none)]:hidden">
           ← → aim · space drops
           <br />P pause · R restart
         </p>
       </aside>
-
-      {/* Phones: sound, help, characters and leaderboard tucked under the play field. */}
-      <footer
-        className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-center gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 md:hidden"
-        ref={setFooterRef}>
-        <RoundButton label={muted ? 'Unmute' : 'Mute'} onClick={toggleMute} size="xs">
-          {muted ? <MutedIcon /> : <SoundIcon />}
-        </RoundButton>
-        <RoundButton label="Characters" onClick={openGroups} size="xs">
-          <GroupsIcon />
-        </RoundButton>
-        <RoundButton label="Leaderboard" onClick={openLeaderboard} size="xs">
-          <TrophyIcon />
-        </RoundButton>
-        <RoundButton label="How to play" onClick={openHelp} size="xs">
-          <span className="text-base font-bold">?</span>
-        </RoundButton>
-        <span className="mk-label min-w-0 truncate text-xs">{group?.title ?? '…'} · drag, release to drop</span>
-      </footer>
 
       {showPause && (
         <Overlay>
@@ -661,6 +637,7 @@ const MambokaGame: FC<MambokaGameProps> = memo(({fontFamily}) => {
           board={board}
           lastEntryId={lastEntryId}
           names={names}
+          onGroups={openGroups}
           onHelp={openHelp}
           onLeaderboard={openLeaderboard}
           onName={changeName}
@@ -683,35 +660,27 @@ for (const t of TIERS) DEFAULT_THUMBS.push(t.src);
 
 /* ---------------------------------------------------------------- cards */
 
-const HELP_ROW_STYLES: CSSProperties[] = [];
-for (let i = 0; i < TIERS.length; i++) HELP_ROW_STYLES.push({height: 24 + i * 6, maxWidth: 40 + i * 4});
+/** True when launched from a home-screen icon (iOS exposes `navigator.standalone`; others the display-mode query). */
+const isStandalone = () =>
+  (navigator as Navigator & {standalone?: boolean}).standalone === true ||
+  window.matchMedia('(display-mode: standalone)').matches;
 
 const HelpCard: FC<{sources: readonly string[]; names: readonly string[]; onClose: () => void}> = memo(
   ({sources, names, onClose}) => {
     const last = names[names.length - 1] ?? 'Mambo';
+    const standalone = useMemo(isStandalone, []);
     return (
       <Overlay>
-        <div className="mk-card mk-pop max-h-full w-full max-w-2xl overflow-y-auto">
+        <div className="mk-card mk-pop flex max-h-full w-full max-w-2xl flex-col overflow-hidden">
           <div className="mk-banner py-2 text-center text-2xl">How to play</div>
-          <div className="flex flex-col gap-4 p-5 text-sm leading-relaxed md:text-base">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5 text-sm leading-relaxed md:text-base">
             <p>
               There are {TIERS.length} characters in total. Drop them into the box; when two of the same kind touch,
               they evolve into the next one. Evolve all the way to <b>{last}</b> so you can fit more in the box.
             </p>
-            <div className="flex items-end justify-center gap-1 overflow-x-auto py-2">
-              {sources.map((src, i) => (
-                <img
-                  alt={names[i] ?? ''}
-                  className="shrink-0 object-contain"
-                  draggable={false}
-                  key={i}
-                  src={src}
-                  style={HELP_ROW_STYLES[i]}
-                  title={names[i] ?? ''}
-                />
-              ))}
+            <div className="self-center">
+              <EvolutionRing names={names} size={200} sources={sources} />
             </div>
-            <div className="h-2 rounded-full bg-gradient-to-r from-[#f7b27c] via-[#fde28a] to-[#9ad46c]" />
             <ul className="list-disc space-y-1 pl-5">
               <li>
                 Only the {DROPPABLE_TIERS} smallest characters fall from Poppy the cloud; the Next bubble shows what
@@ -732,11 +701,19 @@ const HelpCard: FC<{sources: readonly string[]; names: readonly string[]; onClos
               </li>
               <li>
                 <b>Characters</b> lets you upload your own eleven (smallest → biggest) and save them as a group;
-                <b> Leaderboard</b> keeps named scores on this device.
+                <b> Leaderboard</b> keeps named scores on this device. On phones both are in the pause menu.
               </li>
+              {!standalone && (
+                <li>
+                  On a phone, add Mamboka to the home screen (Share → <b>Add to Home Screen</b>) to play full-screen
+                  without the browser bars.
+                </li>
+              )}
             </ul>
             <p className="mk-best text-xs">A parody of Suika Game (Aladdin X). {last} is the watermelon.</p>
-            <button className="mk-pill mk-pill-primary self-center px-10 py-2 text-lg" onClick={onClose} type="button">
+          </div>
+          <div className="flex justify-center border-t border-[#f1d5a4] p-3">
+            <button className="mk-pill mk-pill-primary px-10 py-2 text-lg" onClick={onClose} type="button">
               Back
             </button>
           </div>
@@ -758,44 +735,63 @@ const GameOverCard: FC<{
   onName: (name: string) => void;
   onRestart: () => void;
   onHelp: () => void;
+  onGroups: () => void;
   onLeaderboard: () => void;
-}> = memo(({score, best, board, lastEntryId, playerName, sources, names, onName, onRestart, onHelp, onLeaderboard}) => {
-  const rank = lastEntryId ? board.findIndex(e => e.id === lastEntryId) + 1 : 0;
-  const isBest = score > 0 && score >= best;
-  return (
-    <Overlay>
-      <div className="mk-card mk-pop flex max-h-full w-full max-w-md flex-col overflow-hidden">
-        <div className="mk-banner py-2 text-center text-3xl">Game over</div>
-        <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto p-4 sm:p-5">
-          <div className="mk-bubble h-36 w-36 shrink-0">
-            <span className="mk-label text-base">Score</span>
-            <span className="mk-digits text-4xl">{score}</span>
-            <span className="mk-best mt-2 text-[10px] uppercase tracking-wider">Best score</span>
-            <span className="mk-best text-base">{best}</span>
+}> = memo(
+  ({
+    score,
+    best,
+    board,
+    lastEntryId,
+    playerName,
+    sources,
+    names,
+    onName,
+    onRestart,
+    onHelp,
+    onGroups,
+    onLeaderboard,
+  }) => {
+    const rank = lastEntryId ? board.findIndex(e => e.id === lastEntryId) + 1 : 0;
+    const isBest = score > 0 && score >= best;
+    return (
+      <Overlay>
+        <div className="mk-card mk-pop flex max-h-full w-full max-w-md flex-col overflow-hidden">
+          <div className="mk-banner py-2 text-center text-3xl">Game over</div>
+          <div className="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto p-4 sm:p-5">
+            <div className="mk-bubble h-36 w-36 shrink-0">
+              <span className="mk-label text-base">Score</span>
+              <span className="mk-digits text-4xl">{score}</span>
+              <span className="mk-best mt-2 text-[10px] uppercase tracking-wider">Best score</span>
+              <span className="mk-best text-base">{best}</span>
+            </div>
+            {isBest && <div className="mk-banner rounded-full px-4 py-1 text-sm">\ New best score! /</div>}
+            {lastEntryId && (
+              <>
+                <NameField onChange={onName} value={playerName} />
+                <button className="mk-best text-sm hover:underline" onClick={onLeaderboard} type="button">
+                  Ranked <b>#{rank}</b> on this device — see the leaderboard
+                </button>
+              </>
+            )}
+            <div className="[@media(max-height:700px)]:hidden">
+              <EvolutionRing names={names} size={160} sources={sources} />
+            </div>
           </div>
-          {isBest && <div className="mk-banner rounded-full px-4 py-1 text-sm">\ New best score! /</div>}
-          {lastEntryId && (
-            <>
-              <NameField onChange={onName} value={playerName} />
-              <button className="mk-best text-sm hover:underline" onClick={onLeaderboard} type="button">
-                Ranked <b>#{rank}</b> on this device — see the leaderboard
-              </button>
-            </>
-          )}
-          <div className="[@media(max-height:700px)]:hidden">
-            <EvolutionRing names={names} size={160} sources={sources} />
+          <div className="grid grid-cols-2 gap-3 border-t border-[#f1d5a4] p-3">
+            <button className="mk-pill mk-pill-secondary py-2 text-base" onClick={onHelp} type="button">
+              How to play
+            </button>
+            <button className="mk-pill mk-pill-secondary py-2 text-base" onClick={onGroups} type="button">
+              Characters
+            </button>
+            <button className="mk-pill mk-pill-primary col-span-2 py-2 text-lg" onClick={onRestart} type="button">
+              Restart
+            </button>
           </div>
         </div>
-        <div className="flex gap-3 border-t border-[#f1d5a4] p-3">
-          <button className="mk-pill mk-pill-secondary flex-1 py-2 text-lg" onClick={onHelp} type="button">
-            How to play
-          </button>
-          <button className="mk-pill mk-pill-primary flex-1 py-2 text-lg" onClick={onRestart} type="button">
-            Restart
-          </button>
-        </div>
-      </div>
-    </Overlay>
-  );
-});
+      </Overlay>
+    );
+  },
+);
 GameOverCard.displayName = 'GameOverCard';

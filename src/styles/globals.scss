@@ -10,4 +10,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  /* The page never scrolls; this keeps Android Chrome from pulling to refresh mid-drag. */
+  overscroll-behavior: none;
 }

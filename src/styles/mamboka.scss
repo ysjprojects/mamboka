@@ -19,11 +19,32 @@
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
+  /* No "Save image" sheet from long-pressing a sprite (home-screen apps on iOS). */
+  -webkit-touch-callout: none;
   overscroll-behavior: none;
+  /* No double-tap zoom on the HUD; the modals still pan. The play field takes every gesture itself. */
+  touch-action: manipulation;
 
   canvas {
     display: block;
     touch-action: none;
+  }
+
+  /* The HUD only has buttons; refusing pans there keeps a drag that starts on it from rubber-banding
+   * the page as a home-screen app. */
+  .mk-hud {
+    touch-action: none;
+  }
+
+  /* Modal backdrop: cards stay out of the status bar, home indicator and notch. */
+  .mk-overlay {
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+
+    @media (min-width: 640px) {
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    }
   }
 
   .mk-bubble {
@@ -37,6 +58,16 @@
       radial-gradient(circle at 50% 50%, rgba(255, 244, 222, 0.55) 0 60%, rgba(249, 221, 176, 0.7) 100%);
     box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45), inset 0 -6px 12px rgba(201, 122, 44, 0.18),
       0 6px 14px rgba(90, 50, 10, 0.16);
+  }
+
+  /* Pill-shaped bubble (phone score panel): the sheen is a fixed spot instead of scaling with the width. */
+  .mk-bubble-wide {
+    background: radial-gradient(
+        circle at 1.5rem 1.1rem,
+        rgba(255, 255, 255, 0.9) 0 0.45rem,
+        rgba(255, 255, 255, 0) 0.8rem
+      ),
+      radial-gradient(ellipse at 50% 50%, rgba(255, 244, 222, 0.55) 0 60%, rgba(249, 221, 176, 0.7) 100%);
   }
 
   .mk-label {
