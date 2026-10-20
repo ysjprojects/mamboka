@@ -1,0 +1,13 @@
+{
+  "name": "Mamboka",
+  "short_name": "Mamboka",
+  "description": "A Suika Game parody: merge chibi horse girls up the ladder to Mambo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#c9884a",
+  "theme_color": "#c9884a",
+  "icons": [
+    {"src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

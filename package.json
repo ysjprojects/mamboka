@@ -1,0 +1,47 @@
+{
+  "name": "mamboka",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Suika Game parody: drop chibi horse girls into a glass box and merge matching ones up the ladder from Mejiro McQueen to Mambo. Real silhouette physics, Switch-style scoring, custom character groups, works on phones.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "compile": "tsc --noEmit",
+    "lint": "prettier --write './src/**/*.{ts,tsx,scss}' && eslint './src/**/*.{ts,tsx}' --fix --max-warnings=0"
+  },
+  "dependencies": {
+    "classnames": "^2.3.1",
+    "matter-js": "0.20.0",
+    "next": "14",
+    "poly-decomp": "0.3.0",
+    "react": "18",
+    "react-dom": "18"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "14",
+    "@tailwindcss/forms": "^0.5.0",
+    "@types/matter-js": "0.20.2",
+    "@types/node": "^17.0.21",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "@typescript-eslint/parser": "^5.14.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.10.0",
+    "eslint-config-next": "14",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.29.3",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "eslint-plugin-react-memo": "^0.0.3",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "postcss": "^8.4.8",
+    "prettier": "^2.5.1",
+    "prettier-plugin-tailwindcss": "^0.1.8",
+    "sass": "^1.49.9",
+    "tailwindcss": "^3.4.0",
+    "typescript": "5.5"
+  }
+}
